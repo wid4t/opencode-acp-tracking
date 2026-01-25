@@ -1,0 +1,53 @@
+{
+  "name": "@widat/opencode-acp-tracking",
+  "version": "0.0.3",
+  "author": "widat",
+  "type": "module",
+  "description": "Opencode ACP Tracking",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "node --test",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wid4t/opencode-acp-tracking.git"
+  },
+  "keywords": [
+    "agent",
+    "client-protocol",
+    "ai",
+    "sdk"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@agentclientprotocol/sdk": "^0.13.1",
+    "diff": "^8.0.3",
+    "event-target-polyfill": "^0.0.4"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md"
+  ]
+}
