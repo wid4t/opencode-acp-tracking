@@ -32,7 +32,7 @@ Edit `setting.json` (Zed config):
       "type": "custom",
       "command": "C:/Program Files/nodejs/node.exe",
       "args": [
-        "C:/Users/[change_me]/.cache/opencode/node_modules/opencode-acp-tracking/dist/zed/agent.js"
+        "C:/Users/[change_me]/.cache/opencode/node_modules/@widat/opencode-acp-tracking/dist/zed/agent.js"
       ]
     }
   }

@@ -24,10 +24,10 @@
     "url": "git+https://github.com/wid4t/opencode-acp-tracking.git"
   },
   "keywords": [
-    "agent",
-    "client-protocol",
-    "ai",
-    "sdk"
+    "zed",
+    "opencode",
+    "acp",
+    "tracking"
   ],
   "publishConfig": {
     "access": "public"
