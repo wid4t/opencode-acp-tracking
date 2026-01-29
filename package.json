@@ -1,6 +1,6 @@
 {
   "name": "@widat/opencode-acp-tracking",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "author": "widat",
   "type": "module",
   "description": "Opencode ACP Tracking",
