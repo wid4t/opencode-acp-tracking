@@ -46,3 +46,10 @@ For test this plugin, do not prompt from the Zed thread. This is only a bridge c
 Test by running prompts directly in the OpenCode CLI.
 
 This project is for education only. Use at your own risk.
+
+## Changelog
+
+### 0.0.6
+- Read `opencode.json` configuration to understand permission settings.
+- Support `permission.ask` with `allow` or `ask`.
+- If permission config is missing, treat ask as allow.

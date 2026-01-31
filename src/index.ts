@@ -105,6 +105,34 @@ function extractDiffInfo(diff: string) {
   return { filepath, diff: normalizeDiff(normalized) };
 }
 
+async function editAsk() {
+  const fs = await import("node:fs/promises");
+  const os = await import("node:os");
+  const path = await import("node:path");
+  const configPath = path.join(
+    os.homedir(),
+    ".config",
+    "opencode",
+    "opencode.json",
+  );
+  try {
+    const raw = await fs.readFile(configPath, "utf8");
+    const parsed = JSON.parse(raw) as {
+      permission?: {
+        edit?: string;
+      };
+    };
+    const editPermission = parsed.permission?.edit;
+    if (!editPermission) return false;
+    if (editPermission === "ask") return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+const isEditAsk = await editAsk();
+
 export const NotificationPlugin = async ({
   project: _project,
   client: _client,
@@ -174,7 +202,31 @@ export const NotificationPlugin = async ({
 
   return {
     event: async ({ event }: EventPayload) => {
-      if (event.type === "permission.asked") {
+      if (event.type === "message.part.updated" && !isEditAsk) {
+        const net = await import("node:net");
+        const properties = event.properties;
+        const part = properties.part;
+        if (part.type === "tool") {
+          if (part.tool === "edit") {
+            const state = part.state;
+            if (state.status === "running") {
+              const input = state.input;
+              const filePath = input.filePath;
+              const contentNew = input.newString;
+              await sendFileEdited(net, filePath, contentNew);
+            }
+          } else if (part.tool === "write") {
+            const state = part.state;
+            if (state.status === "completed") {
+              const input = state.input;
+              const filePath = input.filePath;
+              const contentNew = input.content;
+              await fs.writeFile(filePath, "", "utf8");
+              await sendFileEdited(net, filePath, contentNew);
+            }
+          }
+        }
+      } else if (event.type === "permission.asked" && isEditAsk) {
         const properties = event.properties;
         const id = properties.id;
         const metadata = properties.metadata;
@@ -197,7 +249,7 @@ export const NotificationPlugin = async ({
             });
           }
         }
-      } else if (event.type === "permission.replied") {
+      } else if (event.type === "permission.replied" && isEditAsk) {
         const net = await import("node:net");
         const properties = event.properties;
         const id = properties.requestID;
