@@ -268,6 +268,18 @@ export const NotificationPlugin = async ({
 
   const pendingEdits = new Map<string, { file: string; contentNew: string }>();
 
+  function getContentNew(
+    contentOld: string,
+    oldString: string,
+    newString: string,
+  ): string {
+    if (!contentOld.includes(oldString)) {
+      throw new Error("oldString not found in content");
+    }
+
+    return contentOld.replace(oldString, newString);
+  }
+
   return {
     event: async ({ event }: EventPayload) => {
       if (!serverStatus.ok) {
@@ -284,7 +296,21 @@ export const NotificationPlugin = async ({
             if (state.status === "running") {
               const input = state.input;
               const filePath = input.filePath;
-              const contentNew = input.newString;
+              const oldString = input.oldString;
+              const newString = input.newString;
+              let contentOld: string = "";
+              try {
+                await fs.access(filePath);
+                contentOld = await fs.readFile(filePath, "utf8");
+              } catch {
+                await appendLog({ missingFile: filePath });
+              }
+
+              const contentNew = getContentNew(
+                contentOld,
+                oldString,
+                newString,
+              );
               await sendFileEdited(net, filePath, contentNew);
             }
           } else if (part.tool === "write") {

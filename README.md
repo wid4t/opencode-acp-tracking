@@ -49,6 +49,9 @@ This project is for education only. Use at your own risk.
 
 ## Changelog
 
+### 0.0.8
+- Fix issue false tracking
+
 ### 0.0.7
 - Auto detect agent server is running.
 
