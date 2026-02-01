@@ -143,17 +143,21 @@ export const NotificationPlugin = async ({
   const fs = await import("node:fs/promises");
   const os = await import("node:os");
   const path = await import("node:path");
+
   const appDataDir =
     process.env.APPDATA ?? path.join(os.homedir(), "AppData", "Roaming");
   const logDir = path.join(appDataDir, "opencode", "bridge-logs");
   const logPath = path.join(logDir, "plugin.log");
+
   const appendLog = async (payload: unknown) => {
     await fs.mkdir(logDir, { recursive: true });
     const line = `${new Date().toISOString()} ${JSON.stringify(payload)}\n`;
     await fs.appendFile(logPath, line, "utf8");
   };
+
   const sleep = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
+
   const sendFileEdited = async (
     net: typeof import("node:net"),
     file: string,
@@ -197,11 +201,79 @@ export const NotificationPlugin = async ({
       await sleep(200 * attempt);
     }
     await appendLog({ tcpSendFailed: { file } });
+    await updateServerStatus(false);
   };
+
+  const serverStatus = { ok: false, checking: false };
+  let serverCheckTimer: NodeJS.Timeout | null = null;
+
+  const testTcpServer = async (
+    net: typeof import("node:net"),
+  ): Promise<boolean> => {
+    return await new Promise<boolean>((resolve) => {
+      const socket = net.createConnection(
+        { host: "127.0.0.1", port: FILE_EDITED_PORT },
+        () => {
+          socket.end();
+          resolve(true);
+        },
+      );
+      socket.setTimeout(500);
+      socket.on("timeout", () => {
+        socket.destroy();
+        resolve(false);
+      });
+      socket.on("error", () => {
+        resolve(false);
+      });
+    });
+  };
+
+  const updateServerStatus = async (ok: boolean) => {
+    if (ok === serverStatus.ok) return;
+    serverStatus.ok = ok;
+    if (ok) {
+      if (serverCheckTimer) {
+        clearInterval(serverCheckTimer);
+        serverCheckTimer = null;
+      }
+    } else {
+      await appendLog({ tcpServerUnavailable: FILE_EDITED_PORT });
+      serverCheck();
+    }
+  };
+
+  const runServerCheck = async () => {
+    if (serverStatus.checking) return;
+    serverStatus.checking = true;
+    try {
+      const net = await import("node:net");
+      const ok = await testTcpServer(net);
+      await updateServerStatus(ok);
+    } finally {
+      serverStatus.checking = false;
+    }
+  };
+
+  const serverCheck = () => {
+    if (serverStatus.ok) return;
+    if (serverStatus.checking) return;
+    if (serverCheckTimer) return;
+    serverCheckTimer = setInterval(() => {
+      void runServerCheck();
+    }, 2000);
+    void runServerCheck();
+  };
+  serverCheck();
+
   const pendingEdits = new Map<string, { file: string; contentNew: string }>();
 
   return {
     event: async ({ event }: EventPayload) => {
+      if (!serverStatus.ok) {
+        serverCheck();
+        return;
+      }
       if (event.type === "message.part.updated" && !isEditAsk) {
         const net = await import("node:net");
         const properties = event.properties;

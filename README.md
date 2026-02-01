@@ -49,6 +49,9 @@ This project is for education only. Use at your own risk.
 
 ## Changelog
 
+### 0.0.7
+- Auto detect agent server is running.
+
 ### 0.0.6
 - Read `opencode.json` configuration to understand permission settings.
 - Support `permission.ask` with `allow` or `ask`.
